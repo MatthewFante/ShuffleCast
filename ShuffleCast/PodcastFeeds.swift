@@ -22,6 +22,7 @@ class PodcastFeeds: ObservableObject {
     init() {
         // Add default feed
         addFeed(name: "This American Life", urlString: "https://awk.space/tal.xml")
+        addFeed(name: "Stuff You Should Know", urlString: "https://omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/A91018A4-EA4F-4130-BF55-AE270180C327/44710ECC-10BB-48D1-93C7-AE270180C33E/podcast.rss")
         fetchAllFeeds()  // Fetch the episodes for the default feed
     }
     

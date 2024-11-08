@@ -4,6 +4,7 @@ import AVKit
 struct ContentView: View {
     @StateObject private var podcastFeeds = PodcastFeeds()
     @StateObject private var podcastPlayer = PodcastPlayer()
+    @State private var showFeedSelection = false
     
     var body: some View {
         NavigationView {
@@ -95,11 +96,13 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        addFeed()
+                        showFeedSelection = true
                     }) {
-                        Image(systemName: "plus")
+                        Image(systemName: "text.badge.plus")
                     }
                 }
+            }.sheet(isPresented: $showFeedSelection) {
+                FeedSelectionView(podcastFeeds: podcastFeeds, podcastPlayer: podcastPlayer, isPresented: $showFeedSelection)
             }
         }
     }

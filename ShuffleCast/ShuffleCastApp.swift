@@ -12,6 +12,7 @@ struct ShuffleCastApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .accentColor(.red)
         }
     }
 }

@@ -12,7 +12,7 @@ struct ContentView: View {
                 if let currentEpisode = podcastPlayer.currentEpisode {
                     VStack(spacing: 16) {
                         Text(currentEpisode.podcastName)
-                            .font(.headline)
+                            .font(.title)
                             .multilineTextAlignment(.center)
                             .padding(.top)
                         

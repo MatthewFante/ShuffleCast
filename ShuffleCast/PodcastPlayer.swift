@@ -25,6 +25,7 @@ class PodcastPlayer: ObservableObject {
         }
         
         addPeriodicTimeObserver()
+        addEndObserver()
         self.player?.play()
         self.isPlaying = true
     }
@@ -77,6 +78,18 @@ class PodcastPlayer: ObservableObject {
             }
         }
     }
+    
+    private func addEndObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(playNextEpisode), name: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
+    }
+    
+    private func removeEndObserver() {
+        NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
+    }
+    
+    @objc private func playNextEpisode() {
+           skipToNext()
+       }
     
     func seek(to progress: Double) {
         guard let player = player else { return }

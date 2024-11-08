@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import SwiftUI
+import MediaPlayer
 
 class PodcastPlayer: ObservableObject {
     @Published var selectedFeed: PodcastFeed?
@@ -11,7 +12,22 @@ class PodcastPlayer: ObservableObject {
     private var player: AVPlayer?
     private var timeObserverToken: Any?
     
+
+
+    func configureAudioSession() {
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+            setupRemoteTransportControls()
+        } catch {
+            print("Failed to set up audio session: \(error)")
+        }
+    }
+
+    
     func playEpisode(_ episode: PodcastEpisode, fromFeed feed: PodcastFeed) {
+        configureAudioSession()
         stopPlayback() // Ensure no overlap by stopping any current playback
         
         self.selectedFeed = feed
@@ -106,6 +122,70 @@ class PodcastPlayer: ObservableObject {
         }
         player = nil
     }
+    
+    private func setupInterruptionObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: nil
+        )
+    }
+    
+    
+    func setupRemoteTransportControls() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.playCommand.addTarget { [unowned self] event in
+            if !self.isPlaying {
+                self.player?.play()
+                self.isPlaying = true
+                return .success
+            }
+            return .commandFailed
+        }
+
+        commandCenter.pauseCommand.addTarget { [unowned self] event in
+            if self.isPlaying {
+                self.player?.pause()
+                self.isPlaying = false
+                return .success
+            }
+            return .commandFailed
+        }
+
+        commandCenter.nextTrackCommand.addTarget { [unowned self] event in
+            self.skipToNext()
+            return .success
+        }
+    }
+
+    @objc private func handleAudioSessionInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+
+        switch type {
+        case .began:
+            // Audio session has been interrupted
+            player?.pause()
+            isPlaying = false
+        case .ended:
+            // Interruption ended, optionally resume playback
+            if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) {
+                    player?.play()
+                    isPlaying = true
+                }
+            }
+        default:
+            break
+        }
+    }
+
     
     deinit {
         cleanupPlayer()
